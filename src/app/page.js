@@ -9,7 +9,7 @@ async function checkPlayPauseStatus() {
     const response = await fetch("api/spotify", { method: "GET" });
     if (response.ok) {
       const data = await response.json();
-      return data.status;
+      return data;
     }
   } catch (error) {
     console.error("Error checking status:", error);
@@ -20,6 +20,7 @@ export default function Home() {
   const { data: session, status } = useSession();
   const [show, setShow] = useState(false);
   const playPauseRef = useRef(false);
+  const songIdRed = useRef("");
 
   const startFireworks = () => {
     setShow(true);
@@ -28,13 +29,23 @@ export default function Home() {
 
   useEffect(() => {
     const intervalId = setInterval(async () => {
-      const play_status = await checkPlayPauseStatus();
-      if (play_status !== playPauseRef.current) {
+      const data = await checkPlayPauseStatus();
+      console.log("data", data);
+      const play_status = data.status;
+      const song_id = data.song;
+      const action = data.action;
+      if (action === "change" && song_id !== songIdRed.current) {
+        console.log("change song", song_id);
+        songIdRed.current = song_id;
+        change_song(song_id);
+        startFireworks();
+      }
+      if (action === "play_pause" && play_status !== playPauseRef.current) {
         playPauseRef.current = play_status;
         handlePlayPause();
         startFireworks();
       }
-    }, 5000);
+    }, 200);
 
     return () => clearInterval(intervalId);
   }, []);
@@ -55,6 +66,19 @@ export default function Home() {
     }
     const data = await response.json();
     return data;
+  }
+  async function change_song(song_id) {
+    let token = session.user.accessToken;
+    const response = await fetch("https://api.spotify.com/v1/me/player/play", {
+      method: "PUT",
+      body: JSON.stringify({
+        uris: [`spotify:track:${song_id}`],
+      }),
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    console.log("play/pause", response);
   }
   async function handlePlayPause() {
     const currentlyPlayingData = await getCurrentlyPlaying();
