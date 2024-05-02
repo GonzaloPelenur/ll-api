@@ -22,7 +22,7 @@ export async function POST(request) {
   const body = await request.json();
   if (body.type === "play_pause") {
     return NextResponse.json(await play_pause(request));
-  } else if (body.type === "change") {
+  } else if (body.type === "change_song") {
     return NextResponse.json(await change_song(body.song_id));
   } else {
     return NextResponse.json({ error: "Invalid request type" });

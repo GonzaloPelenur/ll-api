@@ -2,6 +2,7 @@
 
 import { useSession, signIn, signOut } from "next-auth/react";
 import Fireworks from "../components/Fireworks";
+import OverlayGIF from "@/components/OverlayGIF";
 import { useState, useEffect, useRef } from "react";
 
 async function checkPlayPauseStatus() {
@@ -19,9 +20,36 @@ async function checkPlayPauseStatus() {
 export default function Home() {
   const { data: session, status } = useSession();
   const [show, setShow] = useState(false);
+  const [musicGIFVisible, setMusicGIFVisible] = useState(false);
+  const [capybaraGIFVisible, setCapybaraGIFVisible] = useState(false);
+  const [dinostopGIFVisible, setDinostopGIFVisible] = useState(false);
+  const [glassGIFVisible, setGlassGIFVisible] = useState(false);
   const playPauseRef = useRef(false);
   const songIdRed = useRef("");
 
+  const musicGIF = "/music.gif";
+  const capybaraGIF = "/capybaragreen.gif";
+  const dinostopGIF = "/dinostopnbg.gif";
+  const glassGIF = "/glass.gif";
+
+  const startGlassGIF = () => {
+    setGlassGIFVisible(true);
+    setTimeout(() => setGlassGIFVisible(false), 2000);
+  };
+  const startDinostopGIF = () => {
+    setDinostopGIFVisible(true);
+    setTimeout(() => setDinostopGIFVisible(false), 3000);
+  };
+
+  const startCapybaraGIF = () => {
+    setCapybaraGIFVisible(true);
+    setTimeout(() => setCapybaraGIFVisible(false), 6000);
+  };
+
+  const startMusicGIF = () => {
+    setMusicGIFVisible(true);
+    setTimeout(() => setMusicGIFVisible(false), 5000);
+  };
   const startFireworks = () => {
     setShow(true);
     setTimeout(() => setShow(false), 2000);
@@ -38,12 +66,20 @@ export default function Home() {
         console.log("change song", song_id);
         songIdRed.current = song_id;
         change_song(song_id);
-        startFireworks();
+        startMusicGIF();
+        // startFireworks();
       }
       if (action === "play_pause" && play_status !== playPauseRef.current) {
         playPauseRef.current = play_status;
+        if (play_status) {
+          console.log("play");
+          startCapybaraGIF();
+        } else {
+          console.log("pause");
+          startDinostopGIF();
+        }
         handlePlayPause();
-        startFireworks();
+        // startFireworks();
       }
     }, 200);
 
@@ -161,44 +197,38 @@ export default function Home() {
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-between p-24">
-      <div className="z-10 max-w-5xl w-full items-center justify-between font-mono text-sm lg:flex">
-        <div className="flex flex-col items-center justify-between">
+      <div className="z-10 max-w-5xl w-full flex flex-col lg:flex-row">
+        {/* Sign in/out button at the top left, small and less noticeable */}
+        <div className="flex items-start justify-start w-full lg:w-auto">
+          {status === "loading" ? (
+            <p>Loading...</p>
+          ) : session ? (
+            <button
+              className="text-xs bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded opacity-75"
+              onClick={() => signOut()}
+              style={{ position: "absolute", top: 0, left: 0, zIndex: 50 }}
+            >
+              Sign out
+            </button>
+          ) : (
+            <button
+              className="text-xs bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded opacity-75"
+              onClick={() => signIn("spotify")}
+              style={{ position: "absolute", top: 0, left: 0, zIndex: 50 }}
+            >
+              Sign in
+            </button>
+          )}
+        </div>
+
+        <div className="flex flex-col items-center justify-between w-full">
           <div className="flex items-center flex-col">
-            <h1 className="text-5xl font-bold">
-              Welcome,{" "}
-              {status === "authenticated"
-                ? session.user.name || "friend"
-                : "stranger"}
-              !
-            </h1>
-            {status === "loading" ? (
-              <p>Loading...</p>
-            ) : session ? (
-              <div className="flex items-center flex-col">
-                <br />
-                <button
-                  className="ml-4 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded "
-                  onClick={() => signOut()}
-                >
-                  Sign out
-                </button>
-                <br />
-                <button
-                  className="ml-4 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-                  onClick={() => handlePlayPause()}
-                >
-                  Play/Pause
-                </button>
-              </div>
-            ) : (
-              <button
-                className="ml-4 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-                onClick={() => signIn("spotify")}
-              >
-                Sign in with Spotify
-              </button>
-            )}
+            {/* Fireworks and GIFs can still be central or as needed */}
             <Fireworks show={show} />
+            <OverlayGIF gifPath={musicGIF} isVisible={musicGIFVisible} />
+            <OverlayGIF gifPath={capybaraGIF} isVisible={capybaraGIFVisible} />
+            <OverlayGIF gifPath={dinostopGIF} isVisible={dinostopGIFVisible} />
+            <OverlayGIF gifPath={glassGIF} isVisible={glassGIFVisible} />
           </div>
         </div>
       </div>
